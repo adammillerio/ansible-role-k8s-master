@@ -1,0 +1,162 @@
+---
+- name: check current kubernetes API server version
+  command: kube-apiserver --version
+  register: apiserver_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubernetes API server
+  get_url:
+    url: "{{ apiserver_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (apiserver_current_version.stdout is not defined)
+    or (apiserver_current_version.stdout is defined and k8s_version not in apiserver_current_version.stdout)
+
+- name: check current kubernetes controller manager version
+  command: kube-controller-manager --version
+  register: controllermanager_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubernetes controller manager
+  get_url:
+    url: "{{ controllermanager_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (controllermanager_current_version.stdout is not defined)
+    or (controllermanager_current_version.stdout is defined and k8s_version not in controllermanager_current_version.stdout)
+
+- name: check current kubernetes scheduler version
+  command: kube-scheduler --version
+  register: scheduler_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubernetes scheduler
+  get_url:
+    url: "{{ scheduler_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (scheduler_current_version.stdout is not defined)
+    or (scheduler_current_version.stdout is defined and k8s_version not in scheduler_current_version.stdout)
+
+- name: check current kubectl version
+  command: kubectl version --client
+  register: kubectl_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubernetes client
+  get_url:
+    url: "{{ kubectl_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (kubectl_current_version.stdout is not defined)
+    or (kubectl_current_version.stdout is defined and k8s_version not in kubectl_current_version.stdout)
+
+- name: create the kubernetes configuration directory
+  file:
+    path: "/var/lib/kubernetes"
+    state: directory
+  become: true
+
+- name: copy the certificates and encryption config to the kubernetes configuration directory
+  copy:
+    remote_src: true
+    src: "{{ item }}"
+    dest: "/var/lib/kubernetes/"
+    mode: 0600
+  become: true
+  with_items:
+    - "/root/ca.pem"
+    - "/root/ca-key.pem"
+    - "/root/kubernetes.pem"
+    - "/root/kubernetes-key.pem"
+    - "/root/encryption-config.yaml"
+
+- name: install the kubernetes API server systemd service
+  template:
+    src: "{{ templates_path }}/kube-apiserver.service.j2"
+    dest: "/etc/systemd/system/kube-apiserver.service"
+  become: true
+  register: apiserver_systemd_unit
+
+- name: install the kubernetes controller manager systemd service
+  template:
+    src: "{{ templates_path }}/kube-controller-manager.service.j2"
+    dest: "/etc/systemd/system/kube-controller-manager.service"
+  become: true
+  register: controllermanager_systemd_unit
+
+- name: install the kubernetes scheduler systemd service
+  copy:
+    src: "{{ files_path }}/kube-scheduler.service"
+    dest: "/etc/systemd/system/kube-scheduler.service"
+  become: true
+  register: scheduler_systemd_unit
+
+- name: enable and start the kubernetes control plane services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    daemon_reload: true
+    enabled: true
+  become: true
+  with_items:
+    - "kube-apiserver"
+    - "kube-controller-manager"
+    - "kube-scheduler"
+
+- name: restart the kubernetes API server systemd service if it was changed
+  systemd:
+    name: "kube-apiserver"
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  when: apiserver_systemd_unit.changed
+
+- name: restart the kubernetes controller manager systemd service if it was changed
+  systemd:
+    name: "kube-controller-manager"
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  when: controllermanager_systemd_unit.changed
+
+- name: restart the kubernetes scheduler systemd service if it was changed
+  systemd:
+    name: "kube-scheduler"
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  when: scheduler_systemd_unit.changed
+
+- name: wait until control plane daemons are ready
+  pause:
+    seconds: 30
+
+- name: copy over the kubernetes API server to kubelet access ClusterRole and ClusterRoleBinding
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/"
+  with_items:
+    - "{{ files_path }}/kube-api-server-to-kubelet-clusterrole.yml"
+    - "{{ files_path }}/kube-api-server-to-kubelet-clusterrolebinding.yml"
+
+- name: apply the kubernetes API server to kubelet access ClusterRole and ClusterRoleBinding
+  shell: "kubectl apply -f {{ item }}"
+  with_items:
+    - "/tmp/kube-api-server-to-kubelet-clusterrole.yml"
+    - "/tmp/kube-api-server-to-kubelet-clusterrolebinding.yml"

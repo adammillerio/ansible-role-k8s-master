@@ -1,0 +1,135 @@
+---
+- name: check if Certificate Authority Key is already present
+  local_action:
+    module: stat
+    path: "{{ certificate_authority_key_path }}"
+  register: certificate_authority_key_stat
+
+- name: check if Certificate Authority Cert is already present
+  local_action:
+    module: stat
+    path: "{{ certificate_authority_cert_path }}"
+  register: certificate_authority_cert_stat
+
+- name: template the Certificate Authority CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/ca-csr.json.j2"
+    dest: "{{ files_path }}/ca-csr.json"
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+- name: template the Certificate Authority config
+  local_action:
+    module: template
+    src: "{{ templates_path }}/ca-config.json.j2"
+    dest: "{{ files_path }}/ca-config.json"
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+- name: generate Certificate Authority
+  local_action: "shell cfssl gencert -initca ca-csr.json | cfssljson -bare ca chdir={{ role_path }}/files"
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the Certificate Authority cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  with_items:
+    - "{{ certificate_authority_cert_path }}"
+    - "{{ certificate_authority_key_path }}"
+
+- name: check if the Admin certificate is already present
+  local_action:
+    module: stat
+    path: "{{ admin_cert_path }}"
+  register: admin_cert_path_stat
+
+- name: check if the Admin key is already present
+  local_action:
+    module: stat
+    path: "{{ admin_key_path }}"
+  register: admin_key_path_stat
+
+- name: template the admin CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/admin-csr.json.j2"
+    dest: "{{ files_path }}/admin-csr.json"
+  when: >
+    admin_cert_path_stat.stat.exists == False
+    or admin_key_path_stat.stat.exists == False
+
+- name: generate admin cert and key
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin chdir={{ role_path }}/files"
+  when: >
+    admin_cert_path_stat.stat.exists == False
+    or admin_key_path_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the admin cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  with_items:
+    - "{{ admin_cert_path }}"
+    - "{{ admin_key_path }}"
+
+- name: check if the Kubernetes API server certificate is already present
+  local_action:
+    module: stat
+    path: "{{ apiserver_cert_path }}"
+  register: apiserver_cert_path_stat
+
+- name: check if the Kubernetes API server key is already present
+  local_action:
+    module: stat
+    path: "{{ apiserver_key_path }}"
+  register: apiserver_key_path_stat
+
+- name: template the API server CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/kubernetes-csr.json.j2"
+    dest: "{{ files_path }}/kubernetes-csr.json"
+  when: >
+    apiserver_cert_path_stat.stat.exists == False
+    or apiserver_key_path_stat.stat.exists == False
+
+- name: gather the play hosts internal IP addresses
+  set_fact:
+    apiserver_master_hosts: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+
+- name: generate Kubernetes API server certificate
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ k8s_apiserver_public_host }},{{ k8s_apiserver_internal_host }},{{ k8s_apiserver_cni_host }},{{ apiserver_master_hosts }} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes chdir={{ role_path }}/files"
+  when: >
+    apiserver_cert_path_stat.stat.exists == False
+    or apiserver_key_path_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the Kubernetes API server cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  with_items:
+    - "{{ apiserver_cert_path }}"
+    - "{{ apiserver_key_path }}"
+
+- name: copy the certificates to the masters
+  copy:
+    src: "{{ item }}"
+    dest: "/root/"
+  become: true
+  with_items:
+    - "{{ certificate_authority_cert_path }}"
+    - "{{ certificate_authority_key_path }}"
+    - "{{ apiserver_key_path }}"
+    - "{{ apiserver_cert_path }}"

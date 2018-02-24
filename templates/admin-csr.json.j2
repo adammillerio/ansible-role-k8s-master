@@ -1,0 +1,16 @@
+{
+    "CN": "admin",
+    "key": {
+        "algo": "{{ pki_algorithm }}",
+        "size": {{ pki_key_size }}
+    },
+    "names": [
+        {
+            "O": "system:masters",
+            "OU": "k8s master admin",
+            "C": "{{ pki_country }}",
+            "L": "{{ pki_locality }}",
+            "ST": "{{ pki_state }}"
+        }
+    ]
+}

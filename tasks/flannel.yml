@@ -1,0 +1,24 @@
+---
+- name: copy over the flannel kubernetes manifest files
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/"
+  with_items:
+    - "{{ files_path }}/flannel-clusterrole.yml"
+    - "{{ files_path }}/flannel-clusterrolebinding.yml"
+    - "{{ files_path }}/flannel-serviceaccount.yml"
+    - "{{ files_path }}/flannel-daemonset.yml"
+
+- name: copy over the flannel kubernetes manifest templates
+  template:
+    src: "{{ templates_path }}/flannel-configmap.yml.j2"
+    dest: "/tmp/flannel-configmap.yml"
+
+- name: apply the flannel kubernetes manifests
+  shell: "kubectl apply -f {{ item }}"
+  with_items:
+    - /tmp/flannel-clusterrole.yml
+    - /tmp/flannel-clusterrolebinding.yml
+    - /tmp/flannel-serviceaccount.yml
+    - /tmp/flannel-configmap.yml
+    - /tmp/flannel-daemonset.yml

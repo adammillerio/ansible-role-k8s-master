@@ -1,0 +1,12 @@
+---
+- import_tasks: cfssl.yml
+
+- import_tasks: pki.yml
+
+- import_tasks: encryption.yml
+
+- import_tasks: etcd.yml
+
+- import_tasks: k8s-control-plane.yml
+
+- import_tasks: flannel.yml

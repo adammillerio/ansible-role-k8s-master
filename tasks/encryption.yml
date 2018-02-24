@@ -1,0 +1,29 @@
+---
+- name: check if the encryption config already exists
+  local_action:
+    module: stat
+    path: "{{ encryption_config_path }}"
+  register: encryption_config_stat
+
+- name: generate the encryption key
+  local_action: "shell head -c 32 /dev/urandom | base64"
+  register: encryption_key_output
+  when: encryption_config_stat.stat.exists == False
+
+- name: store the encryption key variable
+  set_fact:
+    encryption_key: "{{ encryption_key_output.stdout }}"
+  when: encryption_config_stat.stat.exists == False
+
+- name: create the encryption config
+  local_action:
+    module: template
+    src: "{{ templates_path }}/encryption-config.yml.j2"
+    dest: "{{ encryption_config_path }}"
+  when: encryption_config_stat.stat.exists == False
+
+- name: copy the encryption config to the masters
+  copy:
+    src: "{{ encryption_config_path }}"
+    dest: "/root/encryption-config.yaml"
+  become: true
