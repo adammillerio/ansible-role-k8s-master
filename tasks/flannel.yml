@@ -22,3 +22,4 @@
     - /tmp/flannel-serviceaccount.yml
     - /tmp/flannel-configmap.yml
     - /tmp/flannel-daemonset.yml
+  run_once: true
