@@ -3,12 +3,14 @@
   local_action:
     module: stat
     path: "{{ certificate_authority_key_path }}"
+  run_once: true
   register: certificate_authority_key_stat
 
 - name: check if Certificate Authority Cert is already present
   local_action:
     module: stat
     path: "{{ certificate_authority_cert_path }}"
+  run_once: true
   register: certificate_authority_cert_stat
 
 - name: template the Certificate Authority CSR
@@ -16,6 +18,7 @@
     module: template
     src: "{{ templates_path }}/ca-csr.json.j2"
     dest: "{{ files_path }}/ca-csr.json"
+  run_once: true
   when: >
     certificate_authority_key_stat.stat.exists == False
     or certificate_authority_cert_stat.stat.exists == False
@@ -25,12 +28,14 @@
     module: template
     src: "{{ templates_path }}/ca-config.json.j2"
     dest: "{{ files_path }}/ca-config.json"
+  run_once: true
   when: >
     certificate_authority_key_stat.stat.exists == False
     or certificate_authority_cert_stat.stat.exists == False
 
 - name: generate Certificate Authority
   local_action: "shell cfssl gencert -initca ca-csr.json | cfssljson -bare ca chdir={{ role_path }}/files"
+  run_once: true
   when: >
     certificate_authority_key_stat.stat.exists == False
     or certificate_authority_cert_stat.stat.exists == False
@@ -41,6 +46,7 @@
     module: file
     path: "{{ item }}"
     mode: 0664
+  run_once: true
   with_items:
     - "{{ certificate_authority_cert_path }}"
     - "{{ certificate_authority_key_path }}"
@@ -49,12 +55,14 @@
   local_action:
     module: stat
     path: "{{ admin_cert_path }}"
+  run_once: true
   register: admin_cert_path_stat
 
 - name: check if the Admin key is already present
   local_action:
     module: stat
     path: "{{ admin_key_path }}"
+  run_once: true
   register: admin_key_path_stat
 
 - name: template the admin CSR
@@ -62,12 +70,14 @@
     module: template
     src: "{{ templates_path }}/admin-csr.json.j2"
     dest: "{{ files_path }}/admin-csr.json"
+  run_once: true
   when: >
     admin_cert_path_stat.stat.exists == False
     or admin_key_path_stat.stat.exists == False
 
 - name: generate admin cert and key
   local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin chdir={{ role_path }}/files"
+  run_once: true
   when: >
     admin_cert_path_stat.stat.exists == False
     or admin_key_path_stat.stat.exists == False
@@ -78,6 +88,7 @@
     module: file
     path: "{{ item }}"
     mode: 0664
+  run_once: true
   with_items:
     - "{{ admin_cert_path }}"
     - "{{ admin_key_path }}"
@@ -86,12 +97,14 @@
   local_action:
     module: stat
     path: "{{ apiserver_cert_path }}"
+  run_once: true
   register: apiserver_cert_path_stat
 
 - name: check if the Kubernetes API server key is already present
   local_action:
     module: stat
     path: "{{ apiserver_key_path }}"
+  run_once: true
   register: apiserver_key_path_stat
 
 - name: template the API server CSR
@@ -99,6 +112,7 @@
     module: template
     src: "{{ templates_path }}/kubernetes-csr.json.j2"
     dest: "{{ files_path }}/kubernetes-csr.json"
+  run_once: true
   when: >
     apiserver_cert_path_stat.stat.exists == False
     or apiserver_key_path_stat.stat.exists == False
@@ -106,9 +120,11 @@
 - name: gather the play hosts internal IP addresses
   set_fact:
     apiserver_master_hosts: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+  run_once: true
 
 - name: generate Kubernetes API server certificate
   local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ k8s_apiserver_public_host }},{{ k8s_apiserver_internal_host }},{{ k8s_apiserver_cni_host }},{{ apiserver_master_hosts }} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes chdir={{ role_path }}/files"
+  run_once: true
   when: >
     apiserver_cert_path_stat.stat.exists == False
     or apiserver_key_path_stat.stat.exists == False
@@ -119,6 +135,7 @@
     module: file
     path: "{{ item }}"
     mode: 0664
+  run_once: true
   with_items:
     - "{{ apiserver_cert_path }}"
     - "{{ apiserver_key_path }}"

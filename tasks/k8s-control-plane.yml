@@ -160,3 +160,4 @@
   with_items:
     - "/tmp/kube-api-server-to-kubelet-clusterrole.yml"
     - "/tmp/kube-api-server-to-kubelet-clusterrolebinding.yml"
+  run_once: true
