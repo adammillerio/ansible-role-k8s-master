@@ -58,6 +58,20 @@
     - "/root/kubernetes-key.pem"
     - "/root/kubernetes.pem"
 
+- name: gather master IPs
+  set_fact:
+    k8s_master_ips: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+
+- name: combine the IPs and hostnames together in key=value pairs
+  set_fact: k8s_master_combined="{{ k8s_master_combined|default([]) }} + [ '{{ item.0 }}=https://{{ item.1 }}:2380' ]"
+  with_together:
+    - "{{ play_hosts }}"
+    - "{{ k8s_master_ips }}"
+
+- name: create a string with a CSV containing the key=value pairs for the etcd configuration file
+  set_fact:
+    etcd_host_list: "{{ k8s_master_combined | join(',') }}"
+
 - name: install the etcd systemd service
   template:
     src: "{{ templates_path }}/etcd.service.j2"
