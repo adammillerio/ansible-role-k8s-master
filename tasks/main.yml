@@ -10,3 +10,5 @@
 - import_tasks: k8s-control-plane.yml
 
 - import_tasks: flannel.yml
+
+- import_tasks: kube-dns.yml
