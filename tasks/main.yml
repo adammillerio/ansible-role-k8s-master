@@ -1,9 +1,15 @@
 ---
+- import_tasks: dirs.yml
+
 - import_tasks: cfssl.yml
 
 - import_tasks: pki.yml
 
 - import_tasks: encryption.yml
+
+- import_tasks: docker.yml
+
+- import_tasks: k8s-base.yml
 
 - import_tasks: etcd.yml
 

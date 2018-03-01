@@ -1,7 +1,7 @@
 ---
 - name: check if the encryption config already exists
   stat:
-    path: "/root/encryption-config.yaml"
+    path: "/var/lib/kubernetes/encryption-config.yaml"
   become: true
   run_once: true
   register: encryption_config_stat
@@ -21,6 +21,6 @@
 - name: template the encryption config to the masters
   template:
     src: "{{ templates_path }}/encryption-config.yml.j2"
-    dest: "/root/encryption-config.yaml"
+    dest: "/var/lib/kubernetes/encryption-config.yaml"
   become: true
   when: encryption_config_stat.stat.exists == False

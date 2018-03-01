@@ -1,0 +1,68 @@
+---
+- name: get the current docker version
+  command: docker version
+  register: docker_current_version
+  changed_when: false
+  failed_when: false
+
+- name: download and extract docker
+  unarchive:
+    remote_src: true
+    src: "{{ docker_url }}"
+    dest: "/tmp/"
+    list_files: true
+  register: docker_tar_files
+  when: >
+    (docker_current_version.stdout is not defined)
+    or (docker_current_version.stdout is defined and docker_version not in docker_current_version.stdout)
+
+- name: set the docker archive output directory fact
+  set_fact:
+    docker_tar_path: "{{ docker_tar_files.files[0] }}"
+  when: >
+    (docker_current_version.stdout is not defined)
+    or (docker_current_version.stdout is defined and docker_version not in docker_current_version.stdout)
+
+- name: install docker
+  copy:
+    remote_src: true
+    src: "{{ item }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  with_items:
+    - "/tmp/{{ docker_tar_path }}docker"
+    - "/tmp/{{ docker_tar_path }}docker-containerd"
+    - "/tmp/{{ docker_tar_path }}docker-containerd-ctr"
+    - "/tmp/{{ docker_tar_path }}docker-containerd-shim"
+    - "/tmp/{{ docker_tar_path }}dockerd"
+    - "/tmp/{{ docker_tar_path }}docker-init"
+    - "/tmp/{{ docker_tar_path }}docker-proxy"
+    - "/tmp/{{ docker_tar_path }}docker-runc"
+  when: >
+    (docker_current_version.stdout is not defined)
+    or (docker_current_version.stdout is defined and docker_version not in docker_current_version.stdout)
+
+- name: install the docker systemd unit
+  copy:
+    src: "{{ files_path }}/docker.service"
+    dest: "/etc/systemd/system/"
+  become: yes
+  register: docker_systemd_unit
+
+- name: enable and start the docker service
+  systemd:
+    name: docker
+    state: started
+    daemon_reload: true
+    enabled: true
+  become: true
+
+- name: restart the docker systemd service if it was changed
+  systemd:
+    name: docker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  when: docker_systemd_unit.changed

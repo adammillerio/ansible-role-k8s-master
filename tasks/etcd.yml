@@ -1,63 +1,4 @@
 ---
-- name: check current etcd version
-  command: etcd --version
-  register: etcd_current_version
-  changed_when: false
-  failed_when: false
-
-- name: download and extract etcd
-  unarchive:
-    remote_src: true
-    src: "{{ etcd_url }}"
-    dest: "/tmp"
-    list_files: true
-  register: etcd_tar_files
-  become: true
-  when: >
-    (etcd_current_version.stdout is not defined)
-    or (etcd_current_version.stdout is defined and etcd_version not in etcd_current_version.stdout)
-
-- name: set the etcd archive output directory fact
-  set_fact:
-    etcd_tar_path: "{{ etcd_tar_files.files[0] }}"
-  when: >
-    (etcd_current_version.stdout is not defined)
-    or (etcd_current_version.stdout is defined and etcd_version not in etcd_current_version.stdout)
-
-- name: install etcd
-  copy:
-    remote_src: true
-    src: "{{ item }}"
-    dest: "/usr/local/bin/"
-    mode: 0755
-  become: true
-  with_items:
-    - "/tmp/{{ etcd_tar_path }}etcd"
-    - "/tmp/{{ etcd_tar_path }}etcdctl"
-  when: >
-    (etcd_current_version.stdout is not defined)
-    or (etcd_current_version.stdout is defined and etcd_version not in etcd_current_version.stdout)
-
-- name: create the etcd configuration directories
-  file:
-    path: "{{ item }}"
-    state: directory
-  become: true
-  with_items:
-    - "/etc/etcd"
-    - "/var/lib/etcd"
-
-- name: copy the CA to the etcd configuration directory
-  copy:
-    remote_src: true
-    src: "{{ item }}"
-    dest: "/etc/etcd/"
-  become: true
-  with_items:
-    - "/root/ca.pem"
-    - "/root/kubernetes-key.pem"
-    - "/root/kubernetes.pem"
-
 - name: gather master IPs
   set_fact:
     k8s_master_ips: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
@@ -72,26 +13,14 @@
   set_fact:
     etcd_host_list: "{{ k8s_master_combined | join(',') }}"
 
-- name: install the etcd systemd service
+- name: template the etcd manifest
   template:
-    src: "{{ templates_path }}/etcd.service.j2"
-    dest: "/etc/systemd/system/etcd.service"
-  become: true
-  register: etcd_systemd_unit
+    src: "{{ templates_path }}/etcd.manifest.j2"
+    dest: "/etc/kubernetes/manifests/etcd.manifest"
+  become: yes
 
-- name: enable and reload the etcd service
-  systemd:
-    name: etcd
-    state: started
-    daemon_reload: true
-    enabled: true
-  become: true
-
-- name: restart the etcd systemd service if it was changed
-  systemd:
-    name: "etcd"
-    state: restarted
-    daemon_reload: true
-    enabled: true
-  become: true
-  when: etcd_systemd_unit.changed
+- name: wait for etcd to become available
+  wait_for:
+    host: localhost
+    port: 2379
+    timeout: 120

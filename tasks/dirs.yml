@@ -1,0 +1,16 @@
+---
+- name: create the k8s-master configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  become: true
+  with_items:
+    - "/etc/etcd"
+    - "/var/lib/etcd"
+    - "/etc/cni/net.d"
+    - "/opt/cni/bin"
+    - "/var/lib/kubelet"
+    - "/var/lib/kube-proxy"
+    - "/var/lib/kubernetes"
+    - "/var/run/kubernetes"
+    - "/etc/kubernetes/manifests"

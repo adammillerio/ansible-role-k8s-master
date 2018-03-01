@@ -1,9 +1,12 @@
 # Version configuration
 cfssl_version: "1.2"
-etcd_version: "3.2.11"
+etcd_version: "3.0.17"
 k8s_version: "1.9.0"
 flannel_version: "0.10.0"
 kubedns_version: "1.14.7"
+docker_version: "17.03.2"
+docker_edition: "ce"
+cni_plugins_version: "0.6.0"
 
 # PKI configuration
 pki_expiry: "8760h"
@@ -40,13 +43,16 @@ admin_cert_path: "{{ files_path }}/admin.pem"
 admin_key_path: "{{ files_path }}/admin-key.pem"
 apiserver_cert_path: "{{ files_path }}/kubernetes.pem"
 apiserver_key_path: "{{ files_path }}/kubernetes-key.pem"
+proxy_key_path: "{{ files_path }}/kube-proxy-key.pem"
+proxy_cert_path: "{{ files_path }}/kube-proxy.pem"
 encryption_config_path: "{{ files_path }}/encryption-config.yaml"
 
 # URLs
 cfssl_url: "https://pkg.cfssl.org/R{{ cfssl_version }}/cfssl_linux-amd64"
 cfssljson_url: "https://pkg.cfssl.org/R{{ cfssl_version }}/cfssljson_linux-amd64"
 etcd_url: "https://github.com/coreos/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-apiserver_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kube-apiserver"
-controllermanager_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kube-controller-manager"
-scheduler_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kube-scheduler"
+docker_url: "https://download.docker.com/linux/static/stable/x86_64/docker-{{ docker_version }}-{{ docker_edition }}.tgz"
+cni_plugins_url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_plugins_version }}/cni-plugins-amd64-v{{ cni_plugins_version }}.tgz"
+proxy_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kube-proxy"
+kubelet_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kubelet"
 kubectl_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kubectl"
