@@ -175,17 +175,6 @@
     - "/etc/etcd/"
     - "/var/lib/kubernetes/"
 
-- name: copy the certificates to the masters
-  copy:
-    src: "{{ item }}"
-    dest: "/root/"
-  become: true
-  with_items:
-    - "{{ certificate_authority_cert_path }}"
-    - "{{ certificate_authority_key_path }}"
-    - "{{ apiserver_key_path }}"
-    - "{{ apiserver_cert_path }}"
-
 - name: check if client certificate cert is already present
   local_action:
     module: stat
