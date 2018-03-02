@@ -1,0 +1,16 @@
+{
+    "CN": "system:node:{{ item.0.item }}",
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "US",
+            "L": "Annandale",
+            "O": "system:nodes",
+            "OU": "{{ item.0.item }}",
+            "ST": "Virginia"
+        }
+    ]
+}

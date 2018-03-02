@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    dns.alpha.kubernetes.io/internal: api.internal.dev-k8s.singlecommand.com
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  creationTimestamp: null
+  labels:
+    k8s-app: kube-apiserver
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: gcr.io/google_containers/kube-apiserver:v{{ k8s_version }}
+    command:
+    - /bin/sh
+    - -c
+    - /usr/local/bin/kube-apiserver
+      --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+      --advertise-address={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}
+      --allow-privileged=true
+      --apiserver-count={{ k8s_apiserver_count }}
+      --audit-log-maxage=30
+      --audit-log-maxbackup=3
+      --audit-log-maxsize=100
+      --audit-log-path=/var/log/audit.log
+      --authorization-mode=Node,RBAC
+      --bind-address=0.0.0.0
+      --client-ca-file=/var/lib/kubernetes/ca.pem
+      --enable-swagger-ui=true
+      --etcd-cafile=/var/lib/kubernetes/ca.pem
+      --etcd-certfile=/var/lib/kubernetes/kubernetes.pem
+      --etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem
+      --etcd-servers=https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2379
+      --event-ttl=1h
+      --experimental-encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml
+      --insecure-bind-address=127.0.0.1
+      --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem
+      --kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem
+      --kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem
+      --kubelet-https=true
+      --runtime-config=api/all
+      --service-account-key-file=/var/lib/kubernetes/ca-key.pem
+      --service-cluster-ip-range={{ k8s_cni_service_cidr }}
+      --service-node-port-range={{ k8s_cni_service_ports }}
+      --tls-ca-file=/var/lib/kubernetes/ca.pem
+      --tls-cert-file=/var/lib/kubernetes/kubernetes.pem
+      --tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem
+      --v=2
+    livenessProbe: 
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    ports:
+    - containerPort: 443
+      hostPort: 443
+      name: https
+    - containerPort: 8080
+      hostPort: 8080
+      name: local
+    resources:
+      requests:
+        cpu: 150m
+    volumeMounts:
+    - mountPath: /var/log
+      name: var-log
+    - mountPath: /var/lib/kubernetes
+      name: var-lib-kubernetes
+  hostNetwork: true
+  tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /var/log
+    name: var-log
+  - hostPath:
+      path: /var/lib/kubernetes
+    name: var-lib-kubernetes
+status: {}

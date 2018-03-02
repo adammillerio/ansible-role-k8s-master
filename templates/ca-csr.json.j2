@@ -1,0 +1,16 @@
+{
+    "CN": "Kubernetes",
+    "key": {
+        "algo": "{{ pki_algorithm }}",
+        "size": {{ pki_key_size }}
+    },
+    "names": [
+        {
+            "O": "Kubernetes",
+            "OU": "CA",
+            "C": "{{ pki_country }}",
+            "L": "{{ pki_locality }}",
+            "ST": "{{ pki_state }}"
+        }
+    ]
+}

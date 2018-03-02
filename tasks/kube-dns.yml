@@ -1,0 +1,27 @@
+---
+- name: copy over the kube-dns kubernetes manifest files
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/"
+  with_items:
+    - "{{ files_path }}/kubedns-serviceaccount.yml"
+    - "{{ files_path }}/kubedns-configmap.yml"
+
+- name: copy over the kube-dns deployment kubernetes manifest template
+  template:
+    src: "{{ templates_path }}/kubedns-deployment.yml.j2"
+    dest: "/tmp/kubedns-deployment.yml"
+
+- name: copy over the kube-dns service kubernetes manifest template
+  template:
+    src: "{{ templates_path }}/kubedns-service.yml.j2"
+    dest: "/tmp/kubedns-service.yml"
+
+- name: apply the kube-dns kubernetes manifests
+  shell: "kubectl apply -f {{ item }}"
+  with_items:
+    - /tmp/kubedns-service.yml
+    - /tmp/kubedns-serviceaccount.yml
+    - /tmp/kubedns-configmap.yml
+    - /tmp/kubedns-deployment.yml
+  run_once: true

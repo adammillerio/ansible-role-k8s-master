@@ -1,0 +1,302 @@
+---
+- name: check if Certificate Authority Key is already present
+  local_action:
+    module: stat
+    path: "{{ certificate_authority_key_path }}"
+  run_once: true
+  register: certificate_authority_key_stat
+
+- name: check if Certificate Authority Cert is already present
+  local_action:
+    module: stat
+    path: "{{ certificate_authority_cert_path }}"
+  run_once: true
+  register: certificate_authority_cert_stat
+
+- name: template the Certificate Authority CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/ca-csr.json.j2"
+    dest: "{{ files_path }}/ca-csr.json"
+  run_once: true
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+- name: template the Certificate Authority config
+  local_action:
+    module: template
+    src: "{{ templates_path }}/ca-config.json.j2"
+    dest: "{{ files_path }}/ca-config.json"
+  run_once: true
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+- name: generate Certificate Authority
+  local_action: "shell cfssl gencert -initca ca-csr.json | cfssljson -bare ca chdir={{ role_path }}/files"
+  run_once: true
+  when: >
+    certificate_authority_key_stat.stat.exists == False
+    or certificate_authority_cert_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the Certificate Authority cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  run_once: true
+  with_items:
+    - "{{ certificate_authority_cert_path }}"
+    - "{{ certificate_authority_key_path }}"
+
+- name: copy the Certificate Authority cert to the kubernetes configuration directories
+  copy:
+    src: "{{ certificate_authority_cert_path }}"
+    dest: "{{ item }}"
+  become: true
+  with_items:
+    - "/etc/etcd/"
+    - "/var/lib/kubernetes/"
+
+- name: copy the Certificate Authority key to the kubernetes configuration directories
+  copy:
+    src: "{{ certificate_authority_key_path }}"
+    dest: "{{ item }}"
+  become: true
+  with_items:
+    - "/var/lib/kubernetes/"
+
+- name: check if the Admin certificate is already present
+  local_action:
+    module: stat
+    path: "{{ admin_cert_path }}"
+  run_once: true
+  register: admin_cert_path_stat
+
+- name: check if the Admin key is already present
+  local_action:
+    module: stat
+    path: "{{ admin_key_path }}"
+  run_once: true
+  register: admin_key_path_stat
+
+- name: template the admin CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/admin-csr.json.j2"
+    dest: "{{ files_path }}/admin-csr.json"
+  run_once: true
+  when: >
+    admin_cert_path_stat.stat.exists == False
+    or admin_key_path_stat.stat.exists == False
+
+- name: generate admin cert and key
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin chdir={{ role_path }}/files"
+  run_once: true
+  when: >
+    admin_cert_path_stat.stat.exists == False
+    or admin_key_path_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the admin cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  run_once: true
+  with_items:
+    - "{{ admin_cert_path }}"
+    - "{{ admin_key_path }}"
+
+- name: check if the Kubernetes API server certificate is already present
+  local_action:
+    module: stat
+    path: "{{ apiserver_cert_path }}"
+  run_once: true
+  register: apiserver_cert_path_stat
+
+- name: check if the Kubernetes API server key is already present
+  local_action:
+    module: stat
+    path: "{{ apiserver_key_path }}"
+  run_once: true
+  register: apiserver_key_path_stat
+
+- name: template the API server CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/kubernetes-csr.json.j2"
+    dest: "{{ files_path }}/kubernetes-csr.json"
+  run_once: true
+  when: >
+    apiserver_cert_path_stat.stat.exists == False
+    or apiserver_key_path_stat.stat.exists == False
+
+- name: gather the play hosts internal IP addresses
+  set_fact:
+    apiserver_master_hosts: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+  run_once: true
+
+- name: generate Kubernetes API server certificate
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ k8s_apiserver_public_host }},{{ k8s_apiserver_internal_host }},{{ k8s_apiserver_cni_host }},{{ apiserver_master_hosts }} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes chdir={{ role_path }}/files"
+  run_once: true
+  when: >
+    apiserver_cert_path_stat.stat.exists == False
+    or apiserver_key_path_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the Kubernetes API server cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  run_once: true
+  with_items:
+    - "{{ apiserver_cert_path }}"
+    - "{{ apiserver_key_path }}"
+
+- name: copy the Kubernetes API server cert to the kubernetes configuration directories
+  copy:
+    src: "{{ apiserver_cert_path }}"
+    dest: "{{ item }}"
+  become: true
+  with_items:
+    - "/etc/etcd/"
+    - "/var/lib/kubernetes/"
+
+- name: copy the Kubernetes API server key to the kubernetes configuration directories
+  copy:
+    src: "{{ apiserver_key_path }}"
+    dest: "{{ item }}"
+  become: true
+  with_items:
+    - "/etc/etcd/"
+    - "/var/lib/kubernetes/"
+
+- name: check if client certificate cert is already present
+  local_action:
+    module: stat
+    path: "{{ files_path }}/{{ item }}.pem"
+  run_once: true
+  register: client_cert_stats
+  with_items: "{{ play_hosts }}"
+
+- name: check if client certificate key is already present
+  local_action:
+    module: stat
+    path: "{{ files_path }}/{{ item }}-key.pem"
+  run_once: true
+  register: client_key_stats
+  with_items: "{{ play_hosts }}"
+
+- name: create client certificate CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/client-csr.json.j2"
+    dest: "{{ files_path }}/{{ item.0.item }}-csr.json"
+  run_once: true
+  when: >
+    item.0.stat.exists == False
+    or item.1.stat.exists == False
+  with_together:
+    - "{{ client_cert_stats.results }}"
+    - "{{ client_key_stats.results }}"
+
+- name: generate client certificate
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ item.0.item }} -profile=kubernetes {{ item.0.item }}-csr.json | cfssljson -bare {{ item.0.item }} chdir={{ files_path }}"
+  run_once: true
+  when: >
+    item.0.stat.exists == False
+    or item.1.stat.exists == False
+  with_together:
+    - "{{ client_cert_stats.results }}"
+    - "{{ client_key_stats.results }}"
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the client cert files public readable
+  local_action:
+    module: file
+    path: "{{ files_path }}/{{ item }}.pem"
+    mode: 0664
+  run_once: true
+  with_items: "{{ play_hosts }}"
+
+- name: make the client key files public readable
+  local_action:
+    module: file
+    path: "{{ files_path }}/{{ item }}-key.pem"
+    mode: 0664
+  run_once: true
+  with_items: "{{ play_hosts }}"
+
+- name: copy the client certificate to the host
+  copy:
+    src: "{{ files_path }}/{{ item }}.pem"
+    dest: "/var/lib/kubelet/client.pem"
+  become: true
+  with_items: "{{ play_hosts }}"
+  when: "inventory_hostname == item"
+
+- name: copy the client key to the host
+  copy:
+    src: "{{ files_path }}/{{ item }}-key.pem"
+    dest: "/var/lib/kubelet/client-key.pem"
+  become: true
+  with_items: "{{ play_hosts }}"
+  when: "inventory_hostname == item"
+
+- name: check if kube-proxy Key is already present
+  local_action:
+    module: stat
+    path: "{{ proxy_key_path }}"
+  run_once: true
+  register: proxy_key_stat
+
+- name: check if kube-proxy Cert is already present
+  local_action:
+    module: stat
+    path: "{{ proxy_cert_path }}"
+  run_once: true
+  register: proxy_cert_stat
+
+- name: template the kube-proxy CSR
+  local_action:
+    module: template
+    src: "{{ templates_path }}/kube-proxy-csr.json.j2"
+    dest: "{{ files_path }}/kube-proxy-csr.json"
+  run_once: true
+  when: >
+    proxy_key_stat.stat.exists == False
+    or proxy_cert_stat.stat.exists == False
+
+- name: generate kube-proxy cert
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy chdir={{ files_path }}"
+  run_once: true
+  when: >
+    proxy_key_stat.stat.exists == False
+    or proxy_cert_stat.stat.exists == False
+
+# TODO: Fix making public to get around files being generated as remote_user
+- name: make the kube-proxy cert and key files public readable
+  local_action:
+    module: file
+    path: "{{ item }}"
+    mode: 0664
+  run_once: true
+  with_items:
+    - "{{ proxy_cert_path }}"
+    - "{{ proxy_key_path }}"
+
+- name: copy the kube-proxy cert to the kubernetes configuration directories
+  copy:
+    src: "{{ proxy_cert_path }}"
+    dest: "/var/lib/kube-proxy/kube-proxy.pem"
+  become: true
+
+- name: copy the kube-proxy key to the kubernetes configuration directories
+  copy:
+    src: "{{ proxy_key_path }}"
+    dest: "/var/lib/kube-proxy/kube-proxy-key.pem"
+  become: true

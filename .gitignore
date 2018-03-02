@@ -1,0 +1,4 @@
+files/*.json
+files/*.pem
+files/*.csr
+files/*.yaml

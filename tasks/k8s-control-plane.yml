@@ -1,0 +1,36 @@
+---
+- name: template the kube-apiserver manifest
+  template:
+    src: "{{ templates_path }}/kube-apiserver.manifest.j2"
+    dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
+  become: yes
+
+- name: wait for the kube-apiserver to become available
+  wait_for:
+    host: localhost
+    port: 8080
+    timeout: 120
+
+- name: template the kube-controller-manager-manifest
+  template:
+    src: "{{ templates_path }}/kube-controller-manager.manifest.j2"
+    dest: "/etc/kubernetes/manifests/kube-controller-manager.manifest"
+  become: yes
+
+- name: wait for the kube-controller-manager to become available
+  wait_for:
+    host: localhost
+    port: 10252
+    timeout: 120
+
+- name: template the kube-scheduler manifest
+  template:
+    src: "{{ templates_path }}/kube-scheduler.manifest.j2"
+    dest: "/etc/kubernetes/manifests/kube-scheduler.manifest"
+  become: yes
+
+- name: wait for the kube-scheduler to become available
+  wait_for:
+    host: localhost
+    port: 10251
+    timeout: 120

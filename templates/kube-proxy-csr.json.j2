@@ -1,0 +1,16 @@
+{
+    "CN": "system:kube-proxy",
+    "key": {
+        "algo": "{{ pki_algorithm }}",
+        "size": {{ pki_key_size }}
+    },
+    "names": [
+        {
+            "O": "system:node-proxier",
+            "OU": "kube-proxy",
+            "C": "{{ pki_country }}",
+            "L": "{{ pki_locality }}",
+            "ST": "{{ pki_state }}"
+        }
+    ]
+}

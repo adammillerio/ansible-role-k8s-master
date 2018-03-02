@@ -1,0 +1,107 @@
+---
+- name: install required packages for install
+  package:
+    name: "{{ item }}" 
+    state: present
+    update_cache: yes
+  become: true
+  with_items:
+    - socat
+
+- name: get the current CNI plugins version
+  command: cat /opt/cni/cni-plugins-version
+  register: cni_plugins_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the CNI plugins
+  unarchive:
+    remote_src: true
+    src: "{{ cni_plugins_url }}"
+    dest: "/opt/cni/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (cni_plugins_current_version.stdout is not defined)
+    or (cni_plugins_current_version.stdout is defined and cni_plugins_version not in cni_plugins_current_version.stdout)
+
+- name: write the CNI plugins version to a file
+  shell: "echo {{ cni_plugins_version }} > /opt/cni/cni-plugins-version"
+  become: true
+  when: >
+    (cni_plugins_current_version.stdout is not defined)
+    or (cni_plugins_current_version.stdout is defined and cni_plugins_version not in cni_plugins_current_version.stdout)
+
+- name: check current kubectl version
+  command: kubectl version --client
+  register: kubectl_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubernetes client
+  get_url:
+    url: "{{ kubectl_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (kubectl_current_version.stdout is not defined)
+    or (kubectl_current_version.stdout is defined and k8s_version not in kubectl_current_version.stdout)
+
+- name: check current kubelet
+  command: kubelet --version
+  register: kubelet_current_version
+  changed_when: false
+  failed_when: false
+
+- name: install the kubelet
+  get_url:
+    url: "{{ kubelet_url }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+  become: true
+  when: >
+    (kubelet_current_version.stdout is not defined)
+    or (kubelet_current_version.stdout is defined and k8s_version not in kubelet_current_version.stdout)
+
+- name: template the client kubeconfig to the kubelet configuration directory
+  template:
+    src: "{{ templates_path }}/client.kubeconfig.j2"
+    dest: "/var/lib/kubelet/kubeconfig"
+  become: true
+
+- name: install the kubelet systemd unit
+  template:
+    src: "{{ templates_path }}/kubelet.service.j2"
+    dest: "/etc/systemd/system/kubelet.service"
+  become: true
+  register: kubelet_systemd_unit
+
+- name: enable and start the kubelet services
+  systemd:
+    name: kubelet
+    state: started
+    daemon_reload: true
+    enabled: true
+  become: true
+
+- name: restart the kubelet systemd service if it was changed
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  when: kubelet_systemd_unit.changed
+
+- name: template the proxy kubeconfig to the proxy configuration directory
+  template:
+    src: "{{ templates_path }}/kube-proxy.kubeconfig.j2"
+    dest: "/var/lib/kube-proxy/kubeconfig"
+  become: true
+
+- name: template the kube-proxy manifest
+  template:
+    src: "{{ templates_path }}/kube-proxy.manifest.j2"
+    dest: /etc/kubernetes/manifests/kube-proxy.manifest"
+  become: true

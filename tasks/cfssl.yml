@@ -1,0 +1,46 @@
+---
+- name: check current cfssl version
+  command: cfssl version
+  register: cfssl_current_version
+  changed_when: false
+  failed_when: false
+
+- name: delete existing cfssl version if it's different
+  file:
+    path: "{{ cfssl_path }}"
+    state: absent
+  become: true
+  when: >
+    (cfssl_current_version.stdout is not defined)
+    or (cfssl_current_version.stdout is defined and cfssl_version not in cfssl_current_version.stdout)
+
+
+- name: delete existing cfssljson version if cfssl is different
+  file:
+    path: "{{ cfssljson_path }}"
+    state: absent
+  become: true
+  when: >
+    (cfssl_current_version.stdout is not defined)
+    or (cfssl_current_version.stdout is defined and cfssl_version not in cfssl_current_version.stdout)
+
+- name: install cfssl
+
+  get_url:
+    url: "{{ cfssl_url }}"
+    dest: "{{ cfssl_path }}"
+    mode: 0755
+  become: true
+  when: >
+    (cfssl_current_version.stdout is not defined)
+    or (cfssl_current_version.stdout is defined and cfssl_version not in cfssl_current_version.stdout)
+
+- name: install cfssljson
+  get_url:
+    url: "{{ cfssljson_url }}"
+    dest: "{{ cfssljson_path }}"
+    mode: 0755
+  become: true
+  when: >
+    (cfssl_current_version.stdout is not defined)
+    or (cfssl_current_version.stdout is defined and cfssl_version not in cfssl_current_version.stdout)

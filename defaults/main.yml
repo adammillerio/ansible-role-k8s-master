@@ -1,0 +1,59 @@
+# Version configuration
+cfssl_version: "1.2"
+etcd_version: "3.0.17"
+k8s_version: "1.9.0"
+flannel_version: "0.10.0"
+kubedns_version: "1.14.7"
+docker_version: "17.03.2"
+docker_edition: "ce"
+cni_plugins_version: "0.6.0"
+
+# PKI configuration
+pki_expiry: "8760h"
+pki_algorithm: "rsa"
+pki_key_size: 2048
+pki_country: "US"
+pki_locality: "Annandale"
+pki_state: "Virginia"
+
+# K8S configuration
+k8s_apiserver_public_host: "api.k8s.local"
+k8s_apiserver_internal_host: "api-internal.k8s.local"
+k8s_apiserver_cni_host: "100.64.0.1"
+k8s_apiserver_count: "{{ play_hosts | length }}"
+k8s_cni_cluster_cidr: "100.64.0.0/10"
+k8s_cni_node_cidr: "100.96.0.0/11"
+k8s_cni_service_cidr: "100.64.0.0/13"
+k8s_cni_service_ports: "30000-32767"
+k8s_cni_cluster_dns_host: "100.64.0.10"
+k8s_cni_cluster_dns_domain: "cluster.local"
+
+# Directories
+files_path: "{{ role_path }}/files"
+templates_path: "{{ role_path }}/templates"
+
+# Paths
+cfssl_path: /usr/local/bin/cfssl
+cfssljson_path: /usr/local/bin/cfssljson
+
+# Derived variables
+# Paths
+certificate_authority_key_path: "{{ files_path }}/ca-key.pem"
+certificate_authority_cert_path: "{{ files_path }}/ca.pem"
+admin_cert_path: "{{ files_path }}/admin.pem"
+admin_key_path: "{{ files_path }}/admin-key.pem"
+apiserver_cert_path: "{{ files_path }}/kubernetes.pem"
+apiserver_key_path: "{{ files_path }}/kubernetes-key.pem"
+proxy_key_path: "{{ files_path }}/kube-proxy-key.pem"
+proxy_cert_path: "{{ files_path }}/kube-proxy.pem"
+encryption_config_path: "{{ files_path }}/encryption-config.yaml"
+
+# URLs
+cfssl_url: "https://pkg.cfssl.org/R{{ cfssl_version }}/cfssl_linux-amd64"
+cfssljson_url: "https://pkg.cfssl.org/R{{ cfssl_version }}/cfssljson_linux-amd64"
+etcd_url: "https://github.com/coreos/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+docker_url: "https://download.docker.com/linux/static/stable/x86_64/docker-{{ docker_version }}-{{ docker_edition }}.tgz"
+cni_plugins_url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_plugins_version }}/cni-plugins-amd64-v{{ cni_plugins_version }}.tgz"
+proxy_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kube-proxy"
+kubelet_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kubelet"
+kubectl_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/kubectl"

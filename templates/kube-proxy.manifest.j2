@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  creationTimestamp: null
+  labels:
+    k8s-app: kube-proxy
+    tier: node
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-proxy
+    image: gcr.io/google_containers/kube-proxy:v{{ k8s_version }}
+    command:
+    - /bin/sh
+    - -c
+    - /usr/local/bin/kube-proxy
+      --hostname-override={{ inventory_hostname }}
+      --cluster-cidr={{ k8s_cni_node_cidr }}
+      --kubeconfig=/var/lib/kube-proxy/kubeconfig
+      --master=http://127.0.0.1:8080
+      --proxy-mode=iptables
+      --v=2 2>&1 | /usr/bin/tee -a /var/log/kube-proxy.log
+    resources:
+      requests:
+        cpu: 100m
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/kubernetes
+      name: var-lib-kubernetes
+    - mountPath: /var/lib/kube-proxy
+      name: var-lib-kube-proxy
+    - mountPath: /var/log
+      name: var-log
+  hostNetwork: true
+  tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /var/lib/kubernetes
+    name: var-lib-kubernetes
+  - hostPath:
+      path: /var/lib/kube-proxy
+    name: var-lib-kube-proxy
+  - hostPath:
+      path: /var/log
+    name: var-log
+status: {}
