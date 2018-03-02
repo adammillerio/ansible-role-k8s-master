@@ -50,7 +50,7 @@ The following variables are utilized within the role. Sensible defaults have bee
 ## Versions
 
 | Name  | Default  | Description  |
-|---|---|---|---|
+|---|---|---|
 | cfssl_version | 1.2 | Version of the CloudFlare PKI and TLS toolkit to install |
 | etcd_version | 3.0.17 | Version of the etcd distributed KV store to install |
 | k8s_version | 1.9.0 | Version of the Kubernetes components to install |
@@ -62,7 +62,7 @@ The following variables are utilized within the role. Sensible defaults have bee
 
 ## PKI
 | Name  | Default  | Description  |
-|---|---|---|---|
+|---|---|---|
 | pki_expiry | 8760h | Time period before the generated Certificate Authority certificate expires |
 | pki_algorithm | rsa | Algorithm used to generate the certificates |
 | pki_key_size | 2048 | Size of the generated certificates in bits |
@@ -72,7 +72,7 @@ The following variables are utilized within the role. Sensible defaults have bee
 
 ## Kubernetes
 | Name  | Default  | Description  |
-|---|---|---|---|
+|---|---|---|
 | k8s_apiserver_public_host | api.k8s.local | Public hostname of the K8S API Server, used in certificate generation |
 | k8s_apiserver_internal_host | api-internal.k8s.local | Internal hostname of the K8S API Server, used in certificate generation |
 | k8s_apiserver_cni_host | 100.64.0.1 | IP address of the in-cluster Service IP of the K8S API Server, used in certificate generation |
