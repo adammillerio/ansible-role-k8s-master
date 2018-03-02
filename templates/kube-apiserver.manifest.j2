@@ -20,7 +20,7 @@ spec:
       --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
       --advertise-address={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}
       --allow-privileged=true
-      --apiserver-count=1
+      --apiserver-count={{ k8s_apiserver_count }}
       --audit-log-maxage=30
       --audit-log-maxbackup=3
       --audit-log-maxsize=100

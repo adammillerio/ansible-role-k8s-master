@@ -17,9 +17,10 @@ pki_locality: "Annandale"
 pki_state: "Virginia"
 
 # K8S configuration
-k8s_apiserver_public_host: "api.k8s.example.com"
-k8s_apiserver_internal_host: "api-internal.k8s.example.com"
+k8s_apiserver_public_host: "api.k8s.local"
+k8s_apiserver_internal_host: "api-internal.k8s.local"
 k8s_apiserver_cni_host: "100.64.0.1"
+k8s_apiserver_count: "{{ play_hosts | length }}"
 k8s_cni_cluster_cidr: "100.64.0.0/10"
 k8s_cni_node_cidr: "100.96.0.0/11"
 k8s_cni_service_cidr: "100.64.0.0/13"
