@@ -34,3 +34,18 @@
     host: localhost
     port: 10251
     timeout: 120
+
+- name: copy over the kubelet-api-admin manifest files
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/"
+  with_items:
+    - "{{ files_path }}/kubelet-api-admin-clusterrole.yml"
+    - "{{ files_path }}/kubelet-api-admin-clusterrolebinding.yml"
+
+- name: apply the kubelet-api-admin manifests
+  shell: "kubectl apply -f {{ item }}"
+  with_items:
+    - /tmp/kubelet-api-admin-clusterrole.yml
+    - /tmp/kubelet-api-admin-clusterrolebinding.yml
+  run_once: true
