@@ -17,6 +17,10 @@ pki_locality: "Annandale"
 pki_state: "Virginia"
 
 # K8S configuration
+k8s_oidc_enable: false
+k8s_oidc_client_id: "1234567890123-abcdefghijklmnopqrstuvwxyzabcdef.apps.googleusercontent.com"
+k8s_oidc_issuer_url: "https://accounts.google.com"
+k8s_oidc_username_claim: "email"
 k8s_apiserver_public_host: "api.k8s.local"
 k8s_apiserver_internal_host: "api-internal.k8s.local"
 k8s_apiserver_cni_host: "100.64.0.1"
