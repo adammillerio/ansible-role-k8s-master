@@ -1,8 +1,4 @@
 ---
-- name: gather master IPs
-  set_fact:
-    k8s_master_ips: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
-
 - name: combine the IPs and hostnames together in key=value pairs
   set_fact: k8s_master_combined="{{ k8s_master_combined|default([]) }} + [ '{{ item.0 }}=https://{{ item.1 }}:2380' ]"
   with_together:

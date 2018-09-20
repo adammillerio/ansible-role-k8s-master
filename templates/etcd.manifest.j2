@@ -1,3 +1,9 @@
+#jinja2:lstrip_blocks: True
+{% if system_interface == "default" %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_default_ipv4']['address'] %}
+{% else %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_' + system_interface]['ipv4']['address'] %}
+{% endif %}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -36,13 +42,13 @@ spec:
     - name: ETCD_CLIENT_CERT_AUTH
       value: "true"
     - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
-      value: "https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2380"
+      value: "https://{{ bind_ip }}:2380"
     - name: ETCD_LISTEN_PEER_URLS
-      value: "https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2380"
+      value: "https://{{ bind_ip }}:2380"
     - name: ETCD_LISTEN_CLIENT_URLS
-      value: "https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2379,http://127.0.0.1:2379"
+      value: "https://{{ bind_ip }}:2379,http://127.0.0.1:2379"
     - name: ETCD_ADVERTISE_CLIENT_URLS
-      value: "https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2379"
+      value: "https://{{ bind_ip }}:2379"
     - name: ETCD_INITIAL_CLUSTER_TOKEN
       value: etcd-cluster-0
     - name: ETCD_INITIAL_CLUSTER

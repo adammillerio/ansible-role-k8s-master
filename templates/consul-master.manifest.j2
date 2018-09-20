@@ -1,0 +1,64 @@
+#jinja2:lstrip_blocks: True
+{% if system_interface == "default" %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_default_ipv4']['address'] %}
+{% else %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_' + system_interface]['ipv4']['address'] %}
+{% endif %}
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    k8s-app: consul-master
+  name: consul-master
+  namespace: kube-system
+spec:
+  containers:
+  - name: consul
+    image: consul:{{ consul_version }}
+    command:
+    - /bin/sh
+    - -c
+    - /bin/consul
+      agent
+      -server
+      -datacenter="local"
+      -dns-port=53
+      -data-dir="/consul/data"
+      -config-dir="/consul/config"
+      -bootstrap-expect={{ k8s_apiserver_count }}
+      {{ consul_host_list }}
+      -bind='{{ bind_ip }}' 2>&1 | /usr/bin/tee -a /var/log/consul.log
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /
+        port: 8500
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 100m
+    volumeMounts:
+    - mountPath: /consul/data
+      name: consul-data
+    - mountPath: /consul/config
+      name: consul-config
+    - mountPath: /var/log
+      name: var-log
+  hostNetwork: true
+  tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /opt/consul/data
+    name: consul-data
+  - hostPath:
+      path: /opt/consul/config
+    name: consul-config
+  - hostPath:
+      path: /var/log
+    name: var-log
+status: {}

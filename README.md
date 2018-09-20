@@ -30,6 +30,7 @@ This playbook performs the following steps:
     * Kubernetes client (kubectl)
     * Kubernetes agent (kubelet)
     * Kubernetes proxy (kube-proxy)
+* (Optionally) Installs and configures the [consul](https://www.consul.io/) distributed service discovery daemon (consul.yml)
 * Installs and configures the [etcd](https://github.com/coreos/etcd) distributed key-value store (etcd.yml)
 * Installs and configures the Kubernetes control plane daemons (k8s-control-plane.yml)
     * Kubernetes API Server (kube-apiserver)
@@ -52,6 +53,7 @@ The following variables are utilized within the role. Sensible defaults have bee
 | Name  | Default  | Description  |
 |---|---|---|
 | cfssl_version | 1.2 | Version of the CloudFlare PKI and TLS toolkit to install |
+| consul_version | 1.1.0 | Version of the Consul service discovery daemon to install |
 | etcd_version | 3.0.17 | Version of the etcd distributed KV store to install |
 | k8s_version | 1.9.0 | Version of the Kubernetes components to install |
 | flannel_version | 0.10.0 | Version of the flannel CNI to install |
@@ -59,6 +61,11 @@ The following variables are utilized within the role. Sensible defaults have bee
 | docker_version | 17.03.2 | Version of the Docker CRI to install |
 | docker_edition | ce | Edition of the Docker CRI to install |
 | cni_plugins_version | 0.6.0 | Version of the CNI plugins to install |
+
+## System
+| Name  | Default  | Description  |
+|---|---|---|
+| system_interface | default | Interface for services to bind to, "default" will use the first interface Ansible finds |
 
 ## PKI
 | Name  | Default  | Description  |
@@ -70,11 +77,16 @@ The following variables are utilized within the role. Sensible defaults have bee
 | pki_locality | Annandale | Locality of the generated certificates |
 | pki_state | VA | State of the generated certificates |
 
+# Consul
+| Name  | Default  | Description  |
+|---|---|---|
+| consul_enable | true | Whether or not to install Consul for service discovery |
+
 ## Kubernetes
 | Name  | Default  | Description  |
 |---|---|---|
 | k8s_apiserver_public_host | api.k8s.local | Public hostname of the K8S API Server, used in certificate generation |
-| k8s_apiserver_internal_host | api-internal.k8s.local | Internal hostname of the K8S API Server, used in certificate generation |
+| k8s_apiserver_internal_host | kubernetes.service.consul | Internal hostname of the K8S API Server, used in certificate generation, this should always use consul DNS if consul is enabled |
 | k8s_apiserver_cni_host | 100.64.0.1 | IP address of the in-cluster Service IP of the K8S API Server, used in certificate generation |
 | k8s_apiserver_count | # of hosts | Number of master nodes, be sure to override this if not targetting all masters in a play |
 | k8s_cni_cluster_cidr | 100.64.0.0/10 | CIDR range to be used within the cluster |

@@ -14,3 +14,6 @@
     - "/var/lib/kubernetes"
     - "/var/run/kubernetes"
     - "/etc/kubernetes/manifests"
+    - "/opt/consul"
+    - "/opt/consul/config"
+    - "/opt/consul/data"
