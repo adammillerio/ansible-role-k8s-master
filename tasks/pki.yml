@@ -136,11 +136,17 @@
 
 - name: gather the play hosts internal IP addresses
   set_fact:
-    apiserver_master_hosts: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+    apiserver_master_hosts: "{{ k8s_master_ips }}"
   run_once: true
 
+- name: gather the play hosts consul hostnames
+  set_fact:
+    apiserver_master_hosts: "{{ apiserver_master_hosts }} + [ '{{ item }}.node.consul' ]"
+  with_items: "{{ play_hosts }}"
+  when: consul_enable
+
 - name: generate Kubernetes API server certificate
-  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ k8s_apiserver_public_host }},{{ k8s_apiserver_internal_host }},{{ k8s_apiserver_cni_host }},{{ apiserver_master_hosts }} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes chdir={{ role_path }}/files"
+  local_action: "shell cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname={{ k8s_apiserver_public_host }},{{ k8s_apiserver_internal_host }},{{ k8s_apiserver_cni_host }},{{ apiserver_master_hosts | join(',') }} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes chdir={{ role_path }}/files"
   run_once: true
   when: >
     apiserver_cert_path_stat.stat.exists == False

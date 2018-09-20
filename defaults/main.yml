@@ -1,5 +1,6 @@
 # Version configuration
 cfssl_version: "1.2"
+consul_version: "1.1.0"
 etcd_version: "3.0.17"
 k8s_version: "1.9.0"
 flannel_version: "0.10.0"
@@ -7,6 +8,9 @@ kubedns_version: "1.14.7"
 docker_version: "17.03.2"
 docker_edition: "ce"
 cni_plugins_version: "0.6.0"
+
+# System configuration
+system_interface: "default"
 
 # PKI configuration
 pki_expiry: "8760h"
@@ -16,13 +20,16 @@ pki_country: "US"
 pki_locality: "Annandale"
 pki_state: "Virginia"
 
+# Consul configuration
+consul_enable: true
+
 # K8S configuration
 k8s_oidc_enable: false
 k8s_oidc_client_id: "1234567890123-abcdefghijklmnopqrstuvwxyzabcdef.apps.googleusercontent.com"
 k8s_oidc_issuer_url: "https://accounts.google.com"
 k8s_oidc_username_claim: "email"
 k8s_apiserver_public_host: "api.k8s.local"
-k8s_apiserver_internal_host: "api-internal.k8s.local"
+k8s_apiserver_internal_host: "kubernetes.service.consul"
 k8s_apiserver_cni_host: "100.64.0.1"
 k8s_apiserver_count: "{{ play_hosts | length }}"
 k8s_cni_cluster_cidr: "100.64.0.0/10"

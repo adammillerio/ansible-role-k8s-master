@@ -1,0 +1,14 @@
+---
+- name: gather master IPs (default)
+  set_fact:
+    k8s_master_ips: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+  when: system_interface == "default"
+
+- name: gather master IPs (non-default)
+  set_fact:
+    k8s_master_ips: "{{ play_hosts | map('extract', hostvars, ['ansible_' + system_interface, 'ipv4', 'address']) | list }}"
+  when: system_interface != "default"
+
+- name: k8s master IPs
+  debug:
+    var: k8s_master_ips

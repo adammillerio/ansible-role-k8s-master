@@ -1,0 +1,7 @@
+{
+  "service": {
+    "name": "kubernetes",
+    "tags": ["kubernetes"],
+    "port": 6443
+  }
+}

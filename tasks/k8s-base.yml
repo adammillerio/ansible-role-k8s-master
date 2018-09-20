@@ -7,6 +7,7 @@
   become: true
   with_items:
     - socat
+    - ntp
 
 - name: get the current CNI plugins version
   command: cat /opt/cni/cni-plugins-version
@@ -103,5 +104,5 @@
 - name: template the kube-proxy manifest
   template:
     src: "{{ templates_path }}/kube-proxy.manifest.j2"
-    dest: /etc/kubernetes/manifests/kube-proxy.manifest"
+    dest: /etc/kubernetes/manifests/kube-proxy.manifest
   become: true

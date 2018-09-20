@@ -1,4 +1,5 @@
-files/*.json
+files/*-csr.json
+files/*-config.json
 files/*.pem
 files/*.csr
 files/*.yaml

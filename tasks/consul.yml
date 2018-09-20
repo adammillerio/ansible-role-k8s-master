@@ -1,0 +1,27 @@
+---
+- name: combine the IPs and hostnames together in key=value pairs
+  set_fact: consul_k8s_master_combined="{{ consul_k8s_master_combined|default([]) }} + [ '-retry-join={{ item }}' ]"
+  with_items:
+    - "{{ k8s_master_ips }}"
+
+- name: create a string with a CSV containing the key=value pairs for the consul configuration file
+  set_fact:
+    consul_host_list: "{{ consul_k8s_master_combined | join(' ') }}"
+
+- name: install the kubernetes consul service
+  copy:
+    src: "{{ files_path }}/consul-kubernetes-service.json"
+    dest: "/opt/consul/config/kubernetes.json"
+  become: yes
+
+- name: template the consul manifest
+  template:
+    src: "{{ templates_path }}/consul-master.manifest.j2"
+    dest: "/etc/kubernetes/manifests/consul-master.manifest"
+  become: yes
+
+- name: wait for consul to become available
+  wait_for:
+    host: localhost
+    port: 8500
+    timeout: 120
