@@ -1,16 +1,12 @@
 ---
 - name: combine the IPs and hostnames together in key=value pairs
-  set_fact: k8s_master_combined="{{ k8s_master_combined|default([]) }} + [ '-retry-join={{ item }}' ]"
+  set_fact: consul_k8s_master_combined="{{ consul_k8s_master_combined|default([]) }} + [ '-retry-join={{ item }}' ]"
   with_items:
     - "{{ k8s_master_ips }}"
 
 - name: create a string with a CSV containing the key=value pairs for the consul configuration file
   set_fact:
-    consul_host_list: "{{ k8s_master_combined | join(' ') }}"
-
-- name: test
-  debug:
-    var: consul_host_list
+    consul_host_list: "{{ consul_k8s_master_combined | join(' ') }}"
 
 - name: install the kubernetes consul service
   copy:
