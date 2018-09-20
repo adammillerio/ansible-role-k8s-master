@@ -1,8 +1,8 @@
 #jinja2:lstrip_blocks: True
-{% if system_default_interface == "default" %}
-  {% set bind_ip = hostvars[inventory_hostname]['ansible_' + system_default_interface]['ipv4']['address'] %}
-{% else %}
+{% if system_interface == "default" %}
   {% set bind_ip = hostvars[inventory_hostname]['ansible_default_ipv4']['address'] %}
+{% else %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_' + system_interface]['ipv4']['address'] %}
 {% endif %}
 apiVersion: v1
 kind: Pod
