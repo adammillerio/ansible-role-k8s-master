@@ -1,9 +1,15 @@
 ---
-- name: combine the IPs and hostnames together in key=value pairs
+- name: combine the IPs and hostnames together in key=value pairs (non-consul)
   set_fact: k8s_master_combined="{{ k8s_master_combined|default([]) }} + [ '{{ item.0 }}=https://{{ item.1 }}:2380' ]"
   with_together:
     - "{{ play_hosts }}"
     - "{{ k8s_master_ips }}"
+  when: not consul_enable
+
+- name: combine the IPs and hostnames together in key=value pairs (consul)
+  set_fact: k8s_master_combined="{{ k8s_master_combined|default([]) }} + [ '{{ item }}=https://{{ item }}.node.consul:2380' ]"
+  with_items: "{{ play_hosts }}"
+  when: consul_enable
 
 - name: create a string with a CSV containing the key=value pairs for the etcd configuration file
   set_fact:

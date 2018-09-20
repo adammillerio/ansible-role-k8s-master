@@ -14,6 +14,14 @@
     - "/var/lib/kubernetes"
     - "/var/run/kubernetes"
     - "/etc/kubernetes/manifests"
+
+- name: create the consul configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  become: true
+  with_items:
     - "/opt/consul"
     - "/opt/consul/config"
     - "/opt/consul/data"
+  when: consul_enable
