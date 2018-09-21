@@ -17,11 +17,11 @@ metadata:
 spec:
   containers:
   - name: etcd
-    image: gcr.io/google_containers/etcd:{{ etcd_version }}
+    image: quay.io/coreos/etcd:v{{ etcd_version }}
     command:
     - /bin/sh
     - -c
-    - /usr/local/bin/etcd 2>&1 | /bin/tee -a /var/log/etcd.log
+    - /usr/local/bin/etcd 2>&1 | /usr/bin/tee -a /var/log/etcd.log
     env:
     - name: ETCD_NAME
       value: {{ inventory_hostname }}
@@ -78,8 +78,8 @@ spec:
       name: etc-etcd
     - mountPath: /var/lib/etcd
       name: var-lib-etcd
-    - mountPath: /var/log/etcd.log
-      name: var-log-etcd
+    - mountPath: /var/log
+      name: var-log
     - mountPath: /etc/hosts
       name: etc-hosts
       readOnly: true
@@ -95,8 +95,8 @@ spec:
       path: /var/lib/etcd
     name: var-lib-etcd
   - hostPath:
-      path: /var/log/etcd.log
-    name: var-log-etcd
+      path: /var/log
+    name: var-log
   - hostPath:
       path: /etc/hosts
     name: etc-hosts

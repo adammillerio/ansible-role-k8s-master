@@ -1,13 +1,13 @@
 # Version configuration
 cfssl_version: "1.2"
-consul_version: "1.1.0"
-etcd_version: "3.0.17"
-k8s_version: "1.9.0"
+consul_version: "1.2.3"
+etcd_version: "3.3.9"
+k8s_version: "1.11.3"
 flannel_version: "0.10.0"
-kubedns_version: "1.14.7"
-docker_version: "17.03.2"
+kubedns_version: "1.14.13"
+docker_version: "18.06.1"
 docker_edition: "ce"
-cni_plugins_version: "0.6.0"
+cni_plugins_version: "0.7.1"
 
 # System configuration
 system_interface: "default"
