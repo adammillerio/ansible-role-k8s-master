@@ -1,3 +1,9 @@
+#jinja2:lstrip_blocks: True
+{% if system_interface == "default" %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_default_ipv4']['address'] %}
+{% else %}
+  {% set bind_ip = hostvars[inventory_hostname]['ansible_' + system_interface]['ipv4']['address'] %}
+{% endif %}
 [Unit]
 Description=Kubernetes Kubelet
 Documentation=https://github.com/kubernetes/kubernetes
@@ -29,6 +35,7 @@ ExecStart=/usr/local/bin/kubelet \
   --pod-manifest-path=/etc/kubernetes/manifests \
   --eviction-hard=memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%,imagefs.available<10%,imagefs.inodesFree<5% \
   --feature-gates=ExperimentalCriticalPodAnnotation=true \
+  --node-ip={{ bind_ip }} \
   --node-labels=kubernetes.io/role=master,node-role.kubernetes.io/master= \
   --register-with-taints=node-role.kubernetes.io/master=:NoSchedule \
   --v=2
