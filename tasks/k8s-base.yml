@@ -9,6 +9,20 @@
     - socat
     - ntp
 
+# https://github.com/kubernetes/kubernetes/issues/21613#issuecomment-343190401
+- name: enable required kernel modules on boot
+  lineinfile:
+    line: "br_netfilter"
+    path: /etc/modprobe.d/kubernetes.conf
+    create: true
+  become: true
+
+- name: enable required kernel modules
+  modprobe:
+    name: br_netfilter
+    state: present
+  become: true
+
 - name: get the current CNI plugins version
   command: cat /opt/cni/cni-plugins-version
   register: cni_plugins_current_version
