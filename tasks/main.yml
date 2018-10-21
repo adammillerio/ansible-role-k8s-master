@@ -23,3 +23,6 @@
 - import_tasks: flannel.yml
 
 - import_tasks: kube-dns.yml
+
+- import_tasks: helm.yml
+  when: helm_enable

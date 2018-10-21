@@ -8,6 +8,7 @@ kubedns_version: "1.14.13"
 docker_version: "18.06.1"
 docker_edition: "ce"
 cni_plugins_version: "0.7.1"
+helm_tiller_version: "2.11.0"
 
 # System configuration
 system_interface: "default"
@@ -22,6 +23,10 @@ pki_state: "Virginia"
 
 # Consul configuration
 consul_enable: true
+
+# Helm configuration
+helm_enable: false
+helm_tiller_replicas: 1
 
 # K8S configuration
 k8s_oidc_enable: false
