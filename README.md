@@ -38,6 +38,7 @@ This playbook performs the following steps:
     * Kubernetes Scheduler (kube-scheduler)
 * Deploys the [flannel](https://github.com/coreos/flannel) Container Networking Interface as a Kubernetes DaemonSet (flannel.yml)
 * Deploys the Kubernetes DNS cluster addon (kube-dns.yml)
+* (Optionally) Installs and configures the [Helm](https://www.helm.sh/) Tiller packaging tool
 
 There are a few major configuration choices of note in this cluster configuration:
 * Targets Debian 9.0 "stretch"
@@ -61,6 +62,7 @@ The following variables are utilized within the role. Sensible defaults have bee
 | docker_version | 18.06.1 | Version of the Docker CRI to install |
 | docker_edition | ce | Edition of the Docker CRI to install |
 | cni_plugins_version | 0.7.2 | Version of the CNI plugins to install |
+| helm_tiller_version | 2.11.0 | Version of the Helm Tiller to install |
 
 ## System
 | Name  | Default  | Description  |
@@ -81,6 +83,12 @@ The following variables are utilized within the role. Sensible defaults have bee
 | Name  | Default  | Description  |
 |---|---|---|
 | consul_enable | true | Whether or not to install Consul for service discovery |
+
+# Helm
+| Name  | Default  | Description  |
+|---|---|---|
+| helm_enable | true | Whether or not to install Helm Tiller for packaging |
+| helm_tiller_replicas | 1 | How many replicas of the Helm Tiller to deploy |
 
 ## Kubernetes
 | Name  | Default  | Description  |

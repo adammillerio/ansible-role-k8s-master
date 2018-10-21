@@ -1,0 +1,23 @@
+---
+- name: copy over the helm kubernetes manifest files
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/"
+  with_items:
+    - "{{ files_path }}/helm-serviceaccount.yml"
+    - "{{ files_path }}/helm-clusterrolebinding.yml"
+    - "{{ files_path }}/helm-service.yml"
+
+- name: copy over the helm deployment kubernetes manifest template
+  template:
+    src: "{{ templates_path }}/helm-deployment.yml.j2"
+    dest: "/tmp/helm-deployment.yml"
+
+- name: apply the helm kubernetes manifests
+  shell: "kubectl apply -f {{ item }}"
+  with_items:
+    - /tmp/helm-serviceaccount.yml
+    - /tmp/helm-clusterrolebinding.yml
+    - /tmp/helm-deployment.yml
+    - /tmp/helm-service.yml
+  run_once: true
