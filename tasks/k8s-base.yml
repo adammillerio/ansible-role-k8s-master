@@ -79,6 +79,12 @@
     (kubelet_current_version.stdout is not defined)
     or (kubelet_current_version.stdout is defined and k8s_version not in kubelet_current_version.stdout)
 
+- name: template the client config to the kubelet configuration directory
+  template:
+    src: "{{ templates_path }}/client.config.j2"
+    dest: "/var/lib/kubelet/config"
+  become: true
+
 - name: template the client kubeconfig to the kubelet configuration directory
   template:
     src: "{{ templates_path }}/client.kubeconfig.j2"

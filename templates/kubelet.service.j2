@@ -13,28 +13,18 @@ Requires=docker.service
 [Service]
 ExecStart=/usr/local/bin/kubelet \
   --allow-privileged=true \
-  --anonymous-auth=false \
-  --authorization-mode=Webhook \
-  --client-ca-file=/var/lib/kubernetes/ca.pem \
   --cloud-provider= \
-  --cluster-dns={{ k8s_cni_cluster_dns_host }} \
-  --cluster-domain={{ k8s_cni_cluster_dns_domain }} \
   --container-runtime=docker \
   --docker=unix:///var/run/docker.sock \
   --image-pull-progress-deadline=2m \
+  --config=/var/lib/kubelet/config \
   --kubeconfig=/var/lib/kubelet/kubeconfig \
   --network-plugin=cni \
   --cni-bin-dir=/opt/cni/bin/ \
   --cni-conf-dir=/etc/cni/net.d/ \
   --non-masquerade-cidr={{ k8s_cni_cluster_cidr }} \
   --register-node=true \
-  --runtime-request-timeout=15m \
-  --tls-cert-file=/var/lib/kubelet/client.pem \
-  --tls-private-key-file=/var/lib/kubelet/client-key.pem \
   --hostname-override={{ inventory_hostname }} \
-  --pod-manifest-path=/etc/kubernetes/manifests \
-  --eviction-hard=memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%,imagefs.available<10%,imagefs.inodesFree<5% \
-  --feature-gates=ExperimentalCriticalPodAnnotation=true \
   --node-ip={{ bind_ip }} \
   --node-labels=kubernetes.io/role=master,node-role.kubernetes.io/master= \
   --register-with-taints=node-role.kubernetes.io/master=:NoSchedule \
