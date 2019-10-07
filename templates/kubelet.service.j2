@@ -25,7 +25,7 @@ ExecStart=/usr/local/bin/kubelet \
   --register-node=true \
   --hostname-override={{ inventory_hostname }} \
   --node-ip={{ bind_ip }} \
-  --node-labels=kubernetes.io/role=master,node-role.kubernetes.io/master= \
+  --node-labels=node.kubernetes.io/role=master \
   --register-with-taints=node-role.kubernetes.io/master=:NoSchedule \
   --v=2
 Restart=on-failure
