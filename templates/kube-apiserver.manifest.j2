@@ -9,13 +9,13 @@ kind: Pod
 metadata:
   annotations:
     dns.alpha.kubernetes.io/internal: api.internal.dev-k8s.singlecommand.com
-    scheduler.alpha.kubernetes.io/critical-pod: ""
   creationTimestamp: null
   labels:
     k8s-app: kube-apiserver
   name: kube-apiserver
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
   containers:
   - name: kube-apiserver
     image: gcr.io/google_containers/kube-apiserver:v{{ k8s_version }}

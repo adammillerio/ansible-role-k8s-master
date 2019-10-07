@@ -14,8 +14,6 @@ clusterDNS:
 clusterDomain: "{{ k8s_cni_cluster_dns_domain }}"
 runtimeRequestTimeout: "15m"
 staticPodPath: "/etc/kubernetes/manifests"
-featureGates:
-  ExperimentalCriticalPodAnnotation: true
 evictionHard:
   memory.available: "<100Mi"
   nodefs.available: "<10%"

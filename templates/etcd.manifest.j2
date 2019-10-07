@@ -7,14 +7,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  annotations:
-    scheduler.alpha.kubernetes.io/critical-pod: ""
   creationTimestamp: null
   labels:
     k8s-app: etcd-server
   name: etcd-server
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
   containers:
   - name: etcd
     image: quay.io/coreos/etcd:v{{ etcd_version }}
