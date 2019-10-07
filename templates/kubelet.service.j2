@@ -12,7 +12,6 @@ Requires=docker.service
 
 [Service]
 ExecStart=/usr/local/bin/kubelet \
-  --allow-privileged=true \
   --cloud-provider= \
   --container-runtime=docker \
   --docker=unix:///var/run/docker.sock \
