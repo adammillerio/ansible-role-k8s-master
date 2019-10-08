@@ -7,23 +7,30 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      name: kube-flannel
   template:
     metadata:
       labels:
+        name: kube-flannel
         tier: node
         app: flannel
     spec:
       hostNetwork: true
       nodeSelector:
-        beta.kubernetes.io/arch: amd64
+        kubernetes.io/arch: amd64
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
       serviceAccountName: flannel
       initContainers:
       - name: install-cni
-        image: quay.io/coreos/flannel:v0.10.0-amd64
+        image: quay.io/coreos/flannel:v0.11.0-amd64
         command:
         - cp
         args:
@@ -37,7 +44,7 @@ spec:
           mountPath: /etc/kube-flannel/
       containers:
       - name: kube-flannel
-        image: quay.io/coreos/flannel:v0.10.0-amd64
+        image: quay.io/coreos/flannel:v0.11.0-amd64
         command:
         - /opt/bin/flanneld
         args:
