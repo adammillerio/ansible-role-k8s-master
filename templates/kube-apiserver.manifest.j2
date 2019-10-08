@@ -21,7 +21,7 @@ spec:
     - /bin/sh
     - -c
     - /usr/local/bin/kube-apiserver
-      --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+      --admission-control=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
       --advertise-address={{ bind_ip }}
       --allow-privileged=true
       --apiserver-count={{ k8s_apiserver_count }}
