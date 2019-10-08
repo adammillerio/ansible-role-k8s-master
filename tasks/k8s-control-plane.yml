@@ -49,3 +49,6 @@
     - /tmp/kubelet-api-admin-clusterrole.yml
     - /tmp/kubelet-api-admin-clusterrolebinding.yml
   run_once: true
+
+- name: label nodes with master role
+  shell: "kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/master="

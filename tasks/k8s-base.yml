@@ -79,11 +79,19 @@
     (kubelet_current_version.stdout is not defined)
     or (kubelet_current_version.stdout is defined and k8s_version not in kubelet_current_version.stdout)
 
+- name: template the client config to the kubelet configuration directory
+  template:
+    src: "{{ templates_path }}/client.config.j2"
+    dest: "/var/lib/kubelet/config"
+  become: true
+  register: kubelet_config
+
 - name: template the client kubeconfig to the kubelet configuration directory
   template:
     src: "{{ templates_path }}/client.kubeconfig.j2"
     dest: "/var/lib/kubelet/kubeconfig"
   become: true
+  register: kubelet_kubeconfig
 
 - name: install the kubelet systemd unit
   template:
@@ -100,14 +108,17 @@
     enabled: true
   become: true
 
-- name: restart the kubelet systemd service if it was changed
+- name: restart the kubelet systemd service if config has changed
   systemd:
     name: kubelet
     state: restarted
     daemon_reload: true
     enabled: true
   become: true
-  when: kubelet_systemd_unit.changed
+  when: >
+    kubelet_config.changed
+    or kubelet_kubeconfig.changed
+    or kubelet_systemd_unit.changed
 
 - name: template the proxy kubeconfig to the proxy configuration directory
   template:

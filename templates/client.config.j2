@@ -1,0 +1,22 @@
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+tlsCertFile: "/var/lib/kubelet/client.pem"
+tlsPrivateKeyFile: "/var/lib/kubelet/client-key.pem"
+authentication:
+  anonymous:
+    enabled: false
+  x509:
+    clientCAFile: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: "Webhook"
+clusterDNS:
+  - "{{ k8s_cni_cluster_dns_host }}"
+clusterDomain: "{{ k8s_cni_cluster_dns_domain }}"
+runtimeRequestTimeout: "15m"
+staticPodPath: "/etc/kubernetes/manifests"
+evictionHard:
+  memory.available: "100Mi"
+  nodefs.available: "10%"
+  nodefs.inodesFree: "5%"
+  imagefs.available: "10%"
+  imagefs.inodesFree: "5%"

@@ -1,14 +1,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  annotations:
-    scheduler.alpha.kubernetes.io/critical-pod: ""
   creationTimestamp: null
   labels:
     k8s-app: kube-scheduler
   name: kube-scheduler
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
   containers:
   - name: kube-scheduler
     image: gcr.io/google_containers/kube-scheduler:v{{ k8s_version }}
@@ -18,7 +17,7 @@ spec:
     - /usr/local/bin/kube-scheduler
       --leader-elect=true
       --master=http://127.0.0.1:8080
-      --v=2 2>&1 | /bin/tee -a /var/log/kube-scheduler.log
+      --v=2 2>&1 | /usr/bin/tee -a /var/log/kube-scheduler.log
     livenessProbe:
       httpGet:
         host: 127.0.0.1

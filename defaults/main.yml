@@ -2,7 +2,7 @@
 cfssl_version: "1.2"
 consul_version: "1.2.3"
 etcd_version: "3.3.9"
-k8s_version: "1.11.3"
+k8s_version: "1.16.0"
 flannel_version: "0.10.0"
 kubedns_version: "1.14.13"
 docker_version: "18.06.1"

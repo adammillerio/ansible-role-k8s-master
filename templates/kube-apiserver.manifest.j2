@@ -7,15 +7,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  annotations:
-    dns.alpha.kubernetes.io/internal: api.internal.dev-k8s.singlecommand.com
-    scheduler.alpha.kubernetes.io/critical-pod: ""
   creationTimestamp: null
   labels:
     k8s-app: kube-apiserver
   name: kube-apiserver
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
   containers:
   - name: kube-apiserver
     image: gcr.io/google_containers/kube-apiserver:v{{ k8s_version }}
@@ -23,7 +21,7 @@ spec:
     - /bin/sh
     - -c
     - /usr/local/bin/kube-apiserver
-      --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+      --admission-control=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
       --advertise-address={{ bind_ip }}
       --allow-privileged=true
       --apiserver-count={{ k8s_apiserver_count }}
@@ -58,7 +56,7 @@ spec:
       --oidc-issuer-url={{ k8s_oidc_issuer_url }}
       --oidc-username-claim={{ k8s_oidc_username_claim }}
       {% endif %}
-      --v=2 | /bin/tee -a /var/log/kube-apiserver.log
+      --v=2 | /usr/bin/tee -a /var/log/kube-apiserver.log
     livenessProbe: 
       httpGet:
         host: 127.0.0.1
